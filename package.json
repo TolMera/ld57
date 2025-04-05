@@ -1,0 +1,29 @@
+{
+  "name": "ld57-tcc",
+  "version": "1.0.0",
+  "description": "Ludum Dare 57 Game \"The Cloud Cities\"",
+  "main": "code/backend/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TolMera/ld57.git"
+  },
+  "author": "Bjorn Macintosh",
+  "license": "copyright",
+  "bugs": {
+    "url": "https://github.com/TolMera/ld57/issues"
+  },
+  "homepage": "https://github.com/TolMera/ld57#readme",
+  "devDependencies": {
+    "vite": "^6.2.5"
+  },
+  "dependencies": {
+    "@types/three": "^0.175.0",
+    "three": "^0.175.0"
+  }
+}

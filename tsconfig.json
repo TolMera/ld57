@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "typeRoots": [
+            "./types",
+            "./node_modules/@types"
+        ],
+        "checkJs": true,
+        "allowJs": true
+    },
+    "include": [
+        "code/**/*",
+        "types/**/*"
+    ]
+}
