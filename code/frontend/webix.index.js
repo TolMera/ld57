@@ -52,7 +52,7 @@ export class webixController {
         setTimeout(() => {
             this.onListClickDebounce = false;
         }, 2000);
-        
+
         function introVideo() {
             const videos = ["media/1.mp4", "media/2.mp4", "media/3.mp4"]
             return videos[Math.ceil(videos.length * Math.random())]
@@ -72,39 +72,152 @@ export class webixController {
                 setTimeout(() => {
                     document.querySelector('video')
                         .addEventListener('ended', function () {
+                            globalThis.instances.game = new game();
                             console.debug('Video has ended!');
                             webix.ui({
                                 id: "mainArea",
                                 cols: [
                                     {
                                         id: "menu",
-            
+
                                         view: "tabview",
                                         cells: [
                                             {
+                                                //     { id: "tutorial", label: "Tutorial" },
+                                                header: "Tutorial",
+                                                body: {
+                                                    view: `template`,
+                                                    template: `<h1>Tutorial</h1>
+                                                    <ul>
+                                                        <a href="#populationGrowth"><li>Population Growth</li></a>
+                                                        <a href="#placingBuildings"><li>Placing Buildings</li></a>
+                                                    </ul>
+                                                    <h2>populationGrowth</h2>
+                                                    <p>
+                                                        Population growth (or fall) happens constantly throughout the game.  New people are born all the time, because of the gestation time for tiny humans, we don't control when people can have kids.  We're trying to save the human race, kids are too important to put off until later.
+                                                    </p>
+                                                    <p>
+                                                        The fall of population happens constantly as well, if people are not getting enough Food, Water or Oxygen, the population will begin to fall.  It's your job, to rebuild the human race, and that means don't let them die!
+                                                    </p>
+                                                    <h2>placingBuildings</h2>
+                                                    <p>
+                                                        Click on the "build" tab.  You will see a list of all of the available buildings.  I have not had time yet to make this interface more intuitive, but I will explain here how it works.<br />
+                                                        The name is the first part of the item, it tells you "what" the building is.  The inputs are what the building uses to make its outputs.<br />
+                                                        How much of each input, becomes how much of each output is the "rates" - if the inputs are ["oxygen", "sludge"] and the output is ["organicWaste"], the rates will have 3 numbers [A, B, C] A is how much Oxygen it will use, B is how much Sludge it will use, and C is how much organicWaste it will produce.  
+                                                    </p>
+                                                    <p>Click on the list item that you want to build, then click on the sphere to build that item.</p>
+                                                    <pBe aware that each building you build, will affect the balance of the city, heavy objects may even tip the city over</p>
+                                                    <p>----</p>
+                                                    <p>Great Scott Batman! It's a the Tutorial!</p>
+                                                    <p>I haven't yet written the game, so this is a guess.</p>
+                                                    <p>Click "Colony Stats" to view details about the colony, like resources, needs, other details</p>
+                                                    <p>Click "Build", from there you're able to select things to place on the cloud city.</p>
+                                                    <p>Don't run out of stats, don't sink the city, do provide the people with what they need!</p>
+                                                    `,
+                                                }
+                                            }, {
+                                                //     { id: "stats", label: "Colony Stats" },
+                                                header: "Colony Stats",
+                                                body: {
+                                                    id: 'colonyStats',
+                                                    view: `template`,
+                                                    template: function (obj) {
+                                                        return `<h1>Colony Stats</h1>
+                                                            <p>Population: ${Math.round(obj.population)}</p>
+                                                            </br>
+                                                            <h4>Life Support</h4>
+                                                            <p>Battery Charge: ${Math.round(obj.batteryCharge)}</p>
+                                                            <p>Oxygen: ${Math.round(obj.oxygen)}</p>
+                                                            <p>Water: ${Math.round(obj.water)}</p>
+                                                            </br>
+                                                            <h4>Food</h4>
+                                                            <p>Sludge: ${Math.round(obj.sludge)}</p>
+                                                            <p>Ration: ${Math.round(obj.ration)}</p>
+                                                            <p>Gourmet: ${Math.round(obj.gourmet)}</p>
+                                                            </br>
+                                                            <h4>Resources</h4>
+                                                            <p>Metal: ${Math.round(obj.metal)}</p>
+                                                            <p>Hydrogen: ${Math.round(obj.hydrogen)}</p>
+                                                            <p>Polymer: ${Math.round(obj.polymer)}</p>
+                                                            </br>
+                                                            <h4>Waste</h4>
+                                                            <p>OrganicWaste: ${Math.round(obj.organicWaste)}</p>
+                                                            <p>InorganicWaste: ${Math.round(obj.inorganicWaste)}</p>
+                                                        `;
+                                                    },
+                                                    data: globalThis.instances.game.stats
+                                                }
+                                            }, {
+                                                //     { id: "buildings", label: "Build" },
+                                                header: "Build",
+                                                body: {
+                                                    view: `list`,
+                                                    type:{
+                                                        autoheight: true,
+                                                        height: 128,
+                                                    },
+                                                    template: function (obj) {
+                                                        return `<div>
+                                                                <strong>${obj.name}</strong><br />
+                                                                inputs: [${obj.input.join(", ")}]<br />
+                                                                outputs: [${obj.output.join(", ")}]<br />
+                                                                ratios: [${obj.rate.join(", ")}]
+                                                            </div>
+                                                        `;
+                                                    },
+
+                                                    select: true,
+                                                    data: globalThis.instances.game.buildings,
+                                                    click: function () {
+                                                        globalThis.instances.game.onBuildClick
+                                                            .bind(globalThis.instances.game)
+                                                            (...arguments)
+                                                    },
+                                                }
+                                            }, {
+                                                //     { id: "options", label: "Options" },
+                                                header: "Options",
+                                                body: {
+                                                    view: `list`,
+                                                    template: `#id# (#date#)`,
+                                                    select: true,
+                                                    data: [{ id: "1", date: "2025-01-01" }],
+                                                    click: (id, event) => {
+                                                        globalThis.instances.game.onListClick
+                                                            .bind(globalThis.instances.game)
+                                                            (id, event)
+                                                    },
+                                                }
+                                            }, {
+                                                //     { id: "save", label: "Save" },
+                                                header: "Save",
+                                                body: {
+                                                    view: `list`,
+                                                    template: `#id# (#date#)`,
+                                                    select: true,
+                                                    data: [{ id: "1", date: "2025-01-01" }],
+                                                    click: (id, event) => {
+                                                        globalThis.instances.game.onListClick
+                                                            .bind(globalThis.instances.game)
+                                                            (id, event)
+                                                    },
+                                                }
+                                            }, {
                                                 header: "New Game",
                                                 body: {
                                                     view: `list`,
-                                                    template: `#gameId# (#gameDate#)`,
+                                                    template: `#id# (#date#)`,
                                                     select: true,
-                                                    data: [{id: "1", date: "2025-01-01"}],
+                                                    data: [{ id: "1", date: "2025-01-01" }],
                                                     click: (id, event) => {
                                                         globalThis.instances.game.onListClick
-                                                        .bind(globalThis.instances.game)
-                                                        (id, event)
+                                                            .bind(globalThis.instances.game)
+                                                            (id, event)
                                                     },
                                                 }
                                             },
                                         ],
-            
-                                        // data: [
-                                        //     { id: "tutorial", label: "Tutorial" },
-                                        //     { id: "stats", label: "Colony Stats" },
-                                        //     { id: "buildings", label: "Build" },
-                                        //     { id: "options", label: "Options" },
-                                        //     { id: "save", label: "Save" },
-                                        // ],
-                                        maxWidth: 300
+                                        maxWidth: 500
                                     }, {
                                         id: "view",
                                         view: "template",
@@ -112,7 +225,8 @@ export class webixController {
                                     }
                                 ]
                             }, $$("mainArea"));
-                            globalThis.instances.game = new game();
+
+                            globalThis.instances.game.init();
                         });
                 }, 1000);
                 break;

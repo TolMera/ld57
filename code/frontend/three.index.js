@@ -15,6 +15,8 @@ export class threeController {
      */
     camera;
 
+    target;
+
     /**
      * Setup Canvas
      */
@@ -33,6 +35,8 @@ export class threeController {
         this.scene = new THREE.Scene();
         const scene = this.scene;
 
+        this.textureLoader = new THREE.TextureLoader();
+
         this.camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
         const camera = this.camera;
         camera.position.z = 5;
@@ -50,8 +54,9 @@ export class threeController {
         scene.add(light);
 
         this.initSky();
-        this.initFog();
-        this.initClouds();
+        // this.initFog();
+        // this.initClouds();
+        this.enableSphereRotation();
 
         this.renderer = new THREE.WebGLRenderer({ canvas });
         const renderer = this.renderer;
@@ -68,25 +73,49 @@ export class threeController {
 
     parseMouseClick(event) {
         const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();        
+        const mouse = new THREE.Vector2();
         const camera = this.camera;
         const rect = this.canvas.getBoundingClientRect();
-    
+
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    
+
         raycaster.setFromCamera(mouse, camera);
-    
+
         const intersects = raycaster.intersectObject(this.target);
-    
+
         if (intersects.length > 0) {
             const hit = intersects[0];
-    
+
             const worldPoint = hit.point; // World coordinates
             const localPoint = this.target.worldToLocal(worldPoint.clone()); // Local to sphere
-    
-            console.log('World hit:', worldPoint);
-            console.log('Local hit:', localPoint);
+
+            console.debug('World hit:', worldPoint);
+            console.debug('Local hit:', localPoint);
+
+            if (globalThis.instances.game.selectedBuilding) {
+                // TODO: Check if we are within radius of another building, if we are, then we're too close.
+                const buildingRecord = globalThis.instances.game.build(localPoint);
+                if (buildingRecord) {
+                    const map = this.textureLoader.load(buildingRecord.sprite);
+
+                    const material = new THREE.MeshBasicMaterial({
+                        map,
+                        transparent: true,
+                        side: THREE.DoubleSide
+                    });
+
+                    const building = new THREE.Mesh(
+                        new THREE.PlaneGeometry(1, 1), // match original sprite scale
+                        material
+                    );
+
+                    building.position.copy(localPoint.multiplyScalar(1.0025));
+                    building.scale.set(0.25, 0.25, 1); // adjust sprite size
+                    building.lookAt(localPoint.multiplyScalar(2));
+                    this.target.add(building);
+                }
+            }
         }
     }
 
@@ -164,53 +193,53 @@ export class threeController {
             const positions = layer.geometry.attributes.position.array;
             const speed = layer.userData.speed;
             const bounds = 15;
-        
+
             for (let i = 0; i < positions.length; i += 3) {
-                positions[i]     += speed.x * delta; // X
+                positions[i] += speed.x * delta; // X
                 positions[i + 1] += speed.y * delta; // Y
                 positions[i + 2] += speed.z * delta; // Z
-        
+
                 // Wrap X
                 if (positions[i] > bounds) positions[i] -= bounds * 2;
                 if (positions[i] < -bounds) positions[i] += bounds * 2;
-        
+
                 // Wrap Y
                 if (positions[i + 1] > bounds) positions[i + 1] -= bounds * 2;
                 if (positions[i + 1] < -bounds) positions[i + 1] += bounds * 2;
-        
+
                 // Wrap Z
                 if (positions[i + 2] > bounds) positions[i + 2] -= bounds * 2;
                 if (positions[i + 2] < -bounds) positions[i + 2] += bounds * 2;
             }
-        
+
             layer.geometry.attributes.position.needsUpdate = true;
         }
 
         const clouds = [
             createCloudLayer(200, 0xfff5b3, 2.5, new THREE.Vector3(
-                0.001*Math.random(),
-                0.001*Math.random(),
-                0.001*Math.random()
+                0.001 * Math.random(),
+                0.001 * Math.random(),
+                0.001 * Math.random()
             ), 0.5),
             createCloudLayer(200, 0xff4630, 2, new THREE.Vector3(
-                0.002*Math.random(),
-                0.002*Math.random(),
-                0.002*Math.random()
+                0.002 * Math.random(),
+                0.002 * Math.random(),
+                0.002 * Math.random()
             ), 0.45),
             createCloudLayer(200, 0xfff8b5, 1.5, new THREE.Vector3(
-                0.003*Math.random(),
-                0.003*Math.random(),
-                0.003*Math.random()
+                0.003 * Math.random(),
+                0.003 * Math.random(),
+                0.003 * Math.random()
             ), 0.4),
             createCloudLayer(200, 0xffff30, 1, new THREE.Vector3(
-                0.004*Math.random(),
-                0.004*Math.random(),
-                0.004*Math.random()
+                0.004 * Math.random(),
+                0.004 * Math.random(),
+                0.004 * Math.random()
             ), 0.35),
             createCloudLayer(200, 0xff5030, 0.5, new THREE.Vector3(
-                0.005*Math.random(),
-                0.005*Math.random(),
-                0.005*Math.random()
+                0.005 * Math.random(),
+                0.005 * Math.random(),
+                0.005 * Math.random()
             ), 0.3)
         ];
 
@@ -231,7 +260,6 @@ export class threeController {
             }
         });
     }
-
 
     /**
      * Point the camera at the play focus
@@ -257,7 +285,7 @@ export class threeController {
     animationsLastTime;
     animateLoop(nowTime) {
         this.animationsLastTime ??= nowTime;
-        const delta = this.animationsLastTime - nowTime;
+        const delta = nowTime - this.animationsLastTime;
         this.animationsLastTime = nowTime;
         for (const anim of this.animations) anim.fn(delta);
         this.renderer.render(this.scene, this.camera);
@@ -289,6 +317,62 @@ export class threeController {
         return sphere;
     }
 
+    enableSphereRotation() {
+        const doSphereRotation = (delta) => {
+            console.log("delta: ", delta);
+            let totalWeight = 0;
+            const buildings = globalThis.instances.game.weightDistribution;
+            const gravity = new THREE.Vector3(0, -1, 0);
+    
+            // Calculate torque from each building
+            const torque = new THREE.Vector3();
+            const total = new THREE.Vector3(); // for CoM
+            for (const record of buildings) {
+                const weight = record.weight[0];
+                totalWeight += weight;
+    
+                const r = record.localPoint.clone().normalize(); // position from center
+                const force = gravity.clone().multiplyScalar(weight);
+                const localTorque = new THREE.Vector3().crossVectors(r, force); // τ = r × F
+                torque.add(localTorque);
+    
+                total.addScaledVector(r, weight);
+            }
+            console.log("torque: ", torque);
+    
+            if (totalWeight === 0) return;
+        
+            // Setup angularVelocity if needed
+            if (!this.target.userData.angularVelocity) {
+                this.target.userData.angularVelocity = new THREE.Vector3();
+            }
+    
+            const angularVelocity = this.target.userData.angularVelocity;
+    
+            // Integrate torque into angular velocity
+            angularVelocity.add(torque.clone().multiplyScalar(delta*.00000001));
+    
+            // Apply damping
+            const damping = Math.exp(-delta * 0.05);
+            console.log("damping: ", damping);
+            angularVelocity.multiplyScalar(damping);
+    
+            // Apply angular velocity as rotation to the sphere
+            const angle = angularVelocity.length() * delta;
+            if (Math.abs(angle) > 0.0001) {
+                const axis = angularVelocity.clone().normalize();
+            
+                const deltaQuat = new THREE.Quaternion().setFromAxisAngle(axis, angle);
+                this.target.quaternion.premultiply(deltaQuat);
+            }
+        };
+    
+        this.animations.push({
+            id: "cloud-drift",
+            desc: "Follow camera and animate drifting clouds",
+            fn: doSphereRotation.bind(this)
+        });
+    }
 
     /**
      */
