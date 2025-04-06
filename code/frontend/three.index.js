@@ -326,17 +326,15 @@ export class threeController {
     
             // Calculate torque from each building
             const torque = new THREE.Vector3();
-            const total = new THREE.Vector3(); // for CoM
             for (const record of buildings) {
                 const weight = record.weight[0];
                 totalWeight += weight;
     
-                const r = record.localPoint.clone().normalize(); // position from center
+                // const r = record.localPoint.clone().normalize(); // position from center
+                const r = this.target.localToWorld(record.localPoint.clone()).normalize();
                 const force = gravity.clone().multiplyScalar(weight);
                 const localTorque = new THREE.Vector3().crossVectors(r, force); // τ = r × F
                 torque.add(localTorque);
-    
-                total.addScaledVector(r, weight);
             }
             console.log("torque: ", torque);
     
