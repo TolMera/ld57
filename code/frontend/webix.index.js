@@ -68,21 +68,51 @@ export class webixController {
                     position: "center",
                     autoplay: true,
                     controls: false,
-                }
-                    , $$("view"));
+                }, $$("view"));
                 setTimeout(() => {
                     document.querySelector('video')
                         .addEventListener('ended', function () {
                             console.debug('Video has ended!');
-
                             webix.ui({
                                 id: "mainArea",
-                                view: "template",
-                                template: `<canvas id="canvas"></canvas>`
+                                cols: [
+                                    {
+                                        id: "menu",
+            
+                                        view: "tabview",
+                                        cells: [
+                                            {
+                                                header: "New Game",
+                                                body: {
+                                                    view: `list`,
+                                                    template: `#gameId# (#gameDate#)`,
+                                                    select: true,
+                                                    data: [{id: "1", date: "2025-01-01"}],
+                                                    click: (id, event) => {
+                                                        globalThis.instances.game.onListClick
+                                                        .bind(globalThis.instances.game)
+                                                        (id, event)
+                                                    },
+                                                }
+                                            },
+                                        ],
+            
+                                        // data: [
+                                        //     { id: "tutorial", label: "Tutorial" },
+                                        //     { id: "stats", label: "Colony Stats" },
+                                        //     { id: "buildings", label: "Build" },
+                                        //     { id: "options", label: "Options" },
+                                        //     { id: "save", label: "Save" },
+                                        // ],
+                                        maxWidth: 300
+                                    }, {
+                                        id: "view",
+                                        view: "template",
+                                        template: `<canvas id="canvas"></canvas>`
+                                    }
+                                ]
                             }, $$("mainArea"));
-
                             globalThis.instances.game = new game();
-                            console.debug("AF6618B1-CE26-4773-93BA-357238181E29");
                         });
                 }, 1000);
                 break;
@@ -106,6 +136,9 @@ export class webixController {
                         },
                         {
                             template: `Input sample rate <output id="value"></output>: <input type="range" step="1" min="0" max="100" value="${globalThis.defaultInputRate}" onchange="globalThis.inputRate=this.value" />`,
+                        },
+                        {
+                            template: `TODO: Implement Key remapping here so peoiple can map their keyboard.  If I don't get to this, I apollogize to all those not running a US-International keyboard.`
                         }
                     ]
                 }, $$("view"));

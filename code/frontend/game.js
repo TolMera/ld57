@@ -1,14 +1,15 @@
 import { threeController } from './three.index';
+import { webixController } from './webix.index';
 
 export class game {
     constructor() {
         console.debug(`Creating instance of Game`);
         globalThis.instances.threeController = new threeController;
         globalThis.instances.threeController.initCanvas();
-        const cube = globalThis.instances.threeController.demoCube();
-        globalThis.instances.threeController.target = cube;
+        const target = globalThis.instances.threeController.createBaseSphere(3, 9);
+        globalThis.instances.threeController.target = target;
         setInterval(() => {
-            globalThis.instances.threeController.configureCamera(cube);
+            globalThis.instances.threeController.configureCamera(target);
         }, 10);
 
 
@@ -71,6 +72,34 @@ export class game {
         return inputs;
     }
 
+    onListClickDebounce = false;
+    /**
+     * Respon to what list item was clicked
+     * 
+     * @param {string} id The string representing what was clicked
+     * @param {MouseEvent} event the Click event
+     */
+    onListClick(id, event) {
+        if (this.onListClickDebounce) return;
+        this.onListClickDebounce = true;
+        setTimeout(() => {
+            this.onListClickDebounce = false;
+        }, 2000);
+        
+        console.debug(id);
+        switch (id) {
+            case "tutorial":
+                globalThis.instances.webixController;
+                break;
+            case "stats":
+                globalThis.instances.webixController;
+                break;
+            case "buildings":
+                globalThis.instances.webixController;
+                break;
+        }
+    }
+
     setUserOutputs() {
         const slowDown = 0.01;
         return {
@@ -113,7 +142,6 @@ export class game {
         }
     }
 }
-
 
 export class movementController {
     /** types

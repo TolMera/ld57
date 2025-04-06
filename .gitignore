@@ -1,2 +1,9 @@
 node_modules
 **/node_modules
+code/frontend/media/1.mp4
+code/frontend/media/2.mp4
+code/frontend/media/3.mp4
+certs/cert.pem
+certs/key.pem
+types/webix.d.ts
+types/webix.global.d.ts
